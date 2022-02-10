@@ -9,7 +9,12 @@ Rename the .envexample to .env and add your MONGO_URI
 ### Install dependencies
 
 ```
-npm i
+# Backend deps
+npm install
+
+# Frontend deps
+cd frontend
+npm install
 ```
 
 ### Run Server

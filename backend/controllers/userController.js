@@ -7,11 +7,19 @@ const User = require('../models/userModel')
 // @route   POST /api/users
 // @access  Public
 const registerUser = asyncHandler(async (req, res) => {
-  const { name, email, password } = req.body
+  const { name, email, password, password2 } = req.body
 
-  if (!name || !email || !password) {
+  // Check for empty fields
+  if (!name || !email || !password || !password2) {
     res.status(400)
     throw new Error('Please add all fields')
+  }
+
+  // email validation
+  let emailRegExp = new RegExp("[a-z0-9]+@[a-z]+.[a-z]{2,3}");
+  if (!regex.test(emailRegExp)) {
+    res.status(400)
+    throw new Error("Email is not valid")
   }
 
   // Check if user exists
@@ -20,6 +28,12 @@ const registerUser = asyncHandler(async (req, res) => {
   if (userExists) {
     res.status(400)
     throw new Error('User already exists')
+  }
+
+  // Check if passwords match
+  if (password !== password2) { 
+    res.status(400)
+    throw new Error('Passwords do not match')
   }
 
   // Hash password

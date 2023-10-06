@@ -107,7 +107,7 @@ export const goalSlice = createSlice({
         state.isLoading = false
         state.isSuccess = true
         state.goals = state.goals.filter(
-          (goal) => goal._id !== action.payload.id
+          (goal) => goal._id !== action.meta.arg
         )
       })
       .addCase(deleteGoal.rejected, (state, action) => {

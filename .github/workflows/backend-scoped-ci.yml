@@ -1,0 +1,42 @@
+name: Backend Scoped CI
+
+on:
+  pull_request:
+
+jobs:
+  scoped-backend-lint:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # IMPORTANT for git diff
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm install
+
+      - name: Get changed backend JS files
+        id: changed-files
+        run: |
+          git diff --name-only origin/main...HEAD \
+          | grep '^backend/.*\.js$' \
+          | sed 's|^backend/||' > changed_files.txt
+
+      - name: Show changed files
+        run: cat backend/changed_files.txt || echo "No backend JS files changed"
+
+      - name: Run ESLint on changed files only
+        working-directory: backend
+        run: |
+          if [ -s changed_files.txt ]; then
+            npx eslint $(cat changed_files.txt)
+          else
+            echo "No backend JS files to lint"
+          fi

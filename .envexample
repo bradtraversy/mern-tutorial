@@ -1,4 +1,5 @@
-NODE_ENV = development
-PORT = 5000
-MONGO_URI = mongodb+srv://YOURMONGOURI
-JWT_SECRET = abc123
+NODE_ENV=development
+PORT=5000
+MONGO_URI=your_mongodb_uri
+JWT_SECRET=your_secret
+

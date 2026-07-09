@@ -108,6 +108,73 @@ h3 {
   background: none;
 }
 
+.goal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.goal-actions .edit {
+  cursor: pointer;
+  border: 1px solid #000;
+  background: #fff;
+  color: #000;
+  border-radius: 5px;
+  padding: 6px 14px;
+  font: inherit;
+}
+
+.goal-actions .edit:hover {
+  transform: scale(0.98);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 6000;
+  padding: 20px;
+}
+
+.modal {
+  width: 100%;
+  max-width: 520px;
+  background: #fff;
+  border-radius: 12px;
+  padding: 24px;
+  text-align: left;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 20px;
+}
+
+.modal-header h3 {
+  margin-bottom: 0;
+}
+
+.modal-close {
+  border: none;
+  background: transparent;
+  font-size: 2rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
 .form,
 .content {
   width: 70%;
@@ -203,6 +270,22 @@ h3 {
 @media (max-width: 600px) {
   .form {
     width: 90%;
+  }
+
+  .content {
+    width: 90%;
+  }
+
+  .goals {
+    grid-template-columns: 1fr;
+  }
+
+  .modal {
+    padding: 18px;
+  }
+
+  .modal-actions {
+    flex-direction: column;
   }
 
   .heading h1 {

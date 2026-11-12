@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Goalsetter · Privacy checks</title>
+<style>
+:root{font:16px/1.5 system-ui,sans-serif;color:#19332e;background:#f1f5f3}
+*{box-sizing:border-box}body{margin:0}a{color:#146b58}button,select,textarea{font:inherit}
+header{background:#fff;border-bottom:1px solid #dce5e0;padding:18px max(24px,calc((100vw - 1100px)/2));display:flex;justify-content:space-between;gap:20px}
+.brand{text-decoration:none;font-weight:750;color:#19332e}main{max-width:1100px;margin:48px auto;padding:0 24px}
+.eyebrow{color:#53786a;text-transform:uppercase;font-size:.75rem;font-weight:750;letter-spacing:.12em}
+h1{font-size:clamp(2rem,5vw,3rem);line-height:1.15;letter-spacing:-.04em;margin:10px 0 16px}h2{font-size:1.15rem;margin:0 0 10px}p{color:#576c63}
+.intro{max-width:700px}.grid{display:grid;grid-template-columns:1fr 1.3fr;gap:24px;margin-top:28px}.card{background:white;border:1px solid #dce5e0;border-radius:16px;padding:26px;box-shadow:0 6px 24px #183c2910}
+.badge{display:inline-block;padding:5px 12px;border-radius:99px;background:#e9f0ec;font-size:.85rem}.buttons{display:flex;gap:10px;flex-wrap:wrap;margin:20px 0}
+button,.button{border:1px solid #c6d7cd;border-radius:9px;padding:11px 16px;background:white;color:#19332e;cursor:pointer;text-decoration:none;display:inline-block}button:hover{background:#f1f5f3}button.primary{background:#186b55;color:white;border-color:#186b55}button:disabled{opacity:.5;cursor:not-allowed}
+label{display:block;font-weight:650;font-size:.9rem;margin:20px 0 7px}select,textarea{width:100%;border:1px solid #c6d7cd;border-radius:8px;padding:12px;background:#fff;color:#19332e}textarea{font:13px/1.55 ui-monospace,monospace;min-height:135px;resize:vertical}
+pre{font:12px/1.6 ui-monospace,monospace;white-space:pre-wrap;overflow-wrap:anywhere;max-height:450px;overflow:auto;background:#f4f7f5;border-radius:10px;padding:18px;margin:16px 0 0}.muted{font-size:.85rem}.result{margin-top:24px}.error{color:#a03232}.ok{background:#e1f3e8;color:#146b40}.warning{background:#fff0d6;color:#805300}#downloads{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+@media(max-width:750px){main{margin:28px auto}.grid{grid-template-columns:1fr}header{padding:18px 24px}.card{padding:22px}}
+</style>
+</head>
+<body>
+<header><a class="brand" href="/">Goalsetter / Privacy</a><a href="/">Back to my goals ↗</a></header>
+<main>
+<div class="intro"><span class="eyebrow">PrivacyLib integration test</span><h1>Your data. Your privacy checks.</h1><p>Try consent and GDPR policy checks using your Goalsetter account and goals.</p></div>
+<div id="identity" class="badge" role="status">Checking your session…</div>
+<p id="login-note" hidden>Sign in to Goalsetter first, then return to this page. <a href="/login">Go to login →</a></p>
+<div class="grid">
+<section class="card"><h2>1. Set your consent</h2><p>Grant consent before testing a data export, or withdraw it to see how the policy decision changes.</p>
+<div class="buttons"><button class="primary" id="grant" disabled>Grant consent</button><button id="withdraw" disabled>Withdraw consent</button></div>
+<div id="consent-state" class="badge" role="status">Consent not checked yet</div>
+<p class="muted">Consent is saved for your account. Other policy checks return decisions and action plans; they do not edit your profile, delete goals, or send messages.</p></section>
+<section class="card"><h2>2. Run a privacy check</h2>
+<label for="policy">Choose an operation</label><select id="policy" disabled>
+<option value="portability">Export my data · Portability</option><option value="access">Access my data</option><option value="information">Privacy information</option><option value="consent">Check consent</option><option value="lawful">Check lawful processing</option><option value="rectification">Rectification plan</option><option value="erasure">Erasure plan</option><option value="restriction">Restriction plan</option><option value="objection">Objection plan</option><option value="complaint">Complaint plan</option><option value="breach">Breach assessment · Admin only</option>
+</select>
+<label for="payload">Request details (JSON)</label><textarea id="payload" spellcheck="false" disabled>{}</textarea>
+<p class="muted">The server determines your identity. Breach assessment needs explicit administrator permission.</p>
+<button class="primary" id="run" disabled>Run check →</button></section>
+</div>
+<section class="card result" aria-live="polite"><h2>Result <span id="decision" class="badge">Ready when you are</span></h2><p id="message">Grant consent, then run “Export my data” to see your profile and owned goals.</p><div id="downloads"></div><pre id="output">No check has been run.</pre></section>
+</main>
+<script>
+'use strict';
+const byId=id=>document.getElementById(id);
+const templates={consent:{},lawful:{},information:{},access:{},portability:{},rectification:{updates:{name:'Updated name'}},erasure:{fields:['goals'],reason:'withdrawn_consent'},restriction:{fields:['goals'],reason:'data_inaccuracy_suspicion'},objection:{fields:['goals'],reason:'marketing'},complaint:{authority_id:'cy-0000',description:'Local integration test only'},breach:{incident_id:'test-incident'}};
+let token,authenticated=false,busy=false;
+const blobURLs=[];
+function controls(){for(const id of ['grant','withdraw','policy','payload','run'])byId(id).disabled=!authenticated||busy;}
+function clearDownloads(){blobURLs.splice(0).forEach(URL.revokeObjectURL);byId('downloads').replaceChildren();}
+function show(data,message,error=false){clearDownloads();byId('output').textContent=JSON.stringify(data,null,2);byId('message').textContent=message;byId('message').className=error?'error':'';const value=data?.decision??(typeof data==='boolean'?(data?'true':'false'):data?.request?.validated===true?'Validated':'Completed');byId('decision').textContent=error?'Request failed':String(value);byId('decision').className='badge '+(error?'warning':['accept','true','Validated'].includes(value)?'ok':'');if(error)return;const downloads=data?.actions?.downloads||(data?.download?[data.download]:[]);for(const file of downloads){const content=typeof file.content==='string'?file.content:JSON.stringify(file.content,null,2);const url=URL.createObjectURL(new Blob([content],{type:file.mime||'application/json'}));blobURLs.push(url);const link=document.createElement('a');link.className='button';link.href=url;link.download=file.filename||'privacy-export.json';link.textContent='Download '+link.download;byId('downloads').append(link);}}
+async function api(route,method='POST',body={}){if(!authenticated)throw new Error('Sign in to Goalsetter first.');const response=await fetch(route,{method,headers:{'Content-Type':'application/json',Authorization:'Bearer '+token},body:JSON.stringify(body)});const data=await response.json();if(!response.ok){if(response.status===401){authenticated=false;byId('login-note').hidden=false;byId('identity').textContent='Please sign in again';}throw new Error(data.error||data.message||'Request failed: '+response.status);}return data;}
+async function action(work){busy=true;controls();try{await work();}catch(error){show({error:error.message},error.message,true);}finally{busy=false;controls();}}
+async function consent(withdrawn){await action(async()=>{const data=await api('/gdpr/consent','PATCH',{value:'yes',withdrawn});byId('consent-state').textContent=withdrawn?'Consent withdrawn':'Consent granted';byId('consent-state').className='badge '+(withdrawn?'warning':'ok');show(data,withdrawn?'Consent withdrawn. You can now check the resulting policy decisions.':'Consent saved. You can now run a privacy check.');});}
+byId('grant').addEventListener('click',()=>consent(false));byId('withdraw').addEventListener('click',()=>consent(true));
+byId('policy').addEventListener('change',()=>{byId('payload').value=JSON.stringify(templates[byId('policy').value],null,2);});
+byId('run').addEventListener('click',()=>action(async()=>{const body=JSON.parse(byId('payload').value);const data=await api('/gdpr/'+byId('policy').value,'POST',body);show(data,'Policy evaluation complete. Any returned actions are plans only.');}));
+(async()=>{try{const user=JSON.parse(localStorage.getItem('user')||'null');if(!user?.token)throw new Error('Sign in to Goalsetter first.');token=user.token;const response=await fetch('/api/users/me',{headers:{Authorization:'Bearer '+token}});if(!response.ok)throw new Error('Please sign in to Goalsetter again.');const profile=await response.json();authenticated=true;byId('identity').textContent='Signed in as '+profile.name+' · '+profile.email;controls();const valid=await api('/gdpr/consent');byId('consent-state').textContent=valid?'Consent granted':'Consent missing or withdrawn';byId('consent-state').className='badge '+(valid?'ok':'warning');}catch(error){byId('login-note').hidden=!(!authenticated);if(!authenticated)byId('identity').textContent='Not signed in';show({error:error.message},error.message,true);}finally{controls();}})();
+window.addEventListener('beforeunload',clearDownloads);
+</script>
+</body>
+</html>
